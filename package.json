@@ -1,6 +1,6 @@
 {
   "name": "clawclub-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server that lets people spend their idle Claude subscription windows on vetted, high-value tasks for charities — moving tasks to volunteers, not tokens to a pool.",
   "license": "MIT",
   "type": "module",
