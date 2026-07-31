@@ -28,6 +28,20 @@
     ]
   },
   {
+    "id": "demo-4",
+    "title": "Translate a 12-page volunteer handbook into Spanish",
+    "charity": "Bridges Demo Org",
+    "category": "translation",
+    "estimatedEffort": "2-3 sessions",
+    "brief": "Translate our volunteer onboarding handbook (12 pages, plain prose, public document) from English into Spanish (Latin American, neutral register). Keep formatting, headings, and numbered lists intact. Terminology: 'volunteer coordinator' is 'coordinador(a) de voluntariado'; keep program names in English with a parenthetical translation on first use.",
+    "acceptanceCriteria": [
+      "Complete translation, no omitted sections",
+      "Formatting and list numbering preserved",
+      "Specified terminology used consistently",
+      "Register is neutral Latin American Spanish throughout"
+    ]
+  },
+  {
     "id": "demo-3",
     "title": "Accessibility audit of a small nonprofit website (public URL)",
     "charity": "OpenAccess Demo Org",

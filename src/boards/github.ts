@@ -1,5 +1,7 @@
 import {
   CLAIM_TTL_MS,
+  computeStats,
+  type BoardStats,
   type Review,
   type Submission,
   type Task,
@@ -213,14 +215,34 @@ export class GitHubBoard implements TaskBoard {
     };
   }
 
+  private async fetchIssues(state: "open" | "all"): Promise<GhIssue[]> {
+    const issues: GhIssue[] = [];
+    for (let page = 1; ; page++) {
+      const batch = await this.api<GhIssue[]>(
+        `/repos/${this.repo}/issues?labels=task,approved&state=${state}&per_page=100&page=${page}`,
+      );
+      issues.push(...batch);
+      if (batch.length < 100) break;
+    }
+    // The issues endpoint also returns PRs; a board repo shouldn't have
+    // task-labeled PRs, but filter defensively.
+    return issues.filter((i) => !("pull_request" in i));
+  }
+
   async listTasks(category?: string): Promise<Task[]> {
-    const issues = await this.api<GhIssue[]>(
-      `/repos/${this.repo}/issues?labels=task,approved&state=open&per_page=100`,
-    );
+    const issues = await this.fetchIssues("open");
     const tasks = await Promise.all(issues.map((i) => this.toTask(i)));
     return tasks.filter(
       (t) => !category || t.category.toLowerCase() === category.toLowerCase(),
     );
+  }
+
+  async impactStats(): Promise<BoardStats> {
+    // Includes closed issues so accepted-and-closed work still counts toward
+    // volunteers' track records and charities' totals.
+    const issues = await this.fetchIssues("all");
+    const tasks = await Promise.all(issues.map((i) => this.toTask(i)));
+    return computeStats(tasks);
   }
 
   async getTask(id: string): Promise<Task> {

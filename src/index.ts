@@ -2,7 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import type { Task, TaskBoard } from "./types.js";
+import { effortRank, type Task, type TaskBoard } from "./types.js";
 import { envelope } from "./safety.js";
 import { GitHubBoard } from "./boards/github.js";
 import { LocalBoard } from "./boards/local.js";
@@ -43,21 +43,30 @@ server.registerTool(
   {
     title: "List charity tasks",
     description:
-      "List vetted tasks from charities that a volunteer can work on in this session. Optionally filter by category (e.g. code, data, writing, research, translation). Tasks marked with ⚠ flags failed the safety lint and need explicit volunteer approval before starting.",
+      "List vetted tasks from charities that a volunteer can work on in this session. Optionally filter by category (e.g. code, data, writing, research, translation) and by the volunteer's available time (max_effort). Open tasks are sorted smallest-effort first. Tasks marked with ⚠ flags failed the safety lint and need explicit volunteer approval before starting.",
     inputSchema: {
       category: z.string().optional().describe("Only show tasks in this category"),
+      max_effort: z
+        .enum(["1 session", "1-2 sessions", "2-3 sessions"])
+        .optional()
+        .describe("Only show tasks the volunteer can finish in their available time"),
     },
   },
-  async ({ category }) => {
-    const tasks = await board.listTasks(category);
+  async ({ category, max_effort }) => {
+    let tasks = await board.listTasks(category);
+    if (max_effort) {
+      tasks = tasks.filter((t) => effortRank(t.estimatedEffort) <= effortRank(max_effort));
+    }
     if (tasks.length === 0) {
       return text(
-        category
-          ? `No open tasks in category "${category}" on the ${board.name()}.`
+        category || max_effort
+          ? `No open tasks matching those filters on the ${board.name()}.`
           : `No open tasks on the ${board.name()} right now.`,
       );
     }
-    const open = tasks.filter((t) => t.status === "open");
+    const open = tasks
+      .filter((t) => t.status === "open")
+      .sort((a, b) => effortRank(a.estimatedEffort) - effortRank(b.estimatedEffort));
     const rest = tasks.filter((t) => t.status !== "open");
     return text(
       [
@@ -99,12 +108,22 @@ server.registerTool(
   {
     title: "Claim a task",
     description:
-      "Claim a task so other volunteers know it is being worked on. Claim only after the volunteer has seen the brief and agreed to spend their session on it. If the task carries safety-lint flags, get the volunteer's explicit go-ahead first. Claims expire after a few quiet days, so an abandoned task returns to the pool on its own.",
+      "Claim a task so other volunteers know it is being worked on. Claim only after the volunteer has seen the brief and agreed to spend their session on it. If the task carries safety-lint flags, get the volunteer's explicit go-ahead first. Claims expire after a few quiet days, so an abandoned task returns to the pool on its own. The largest (2-3 session) tasks require at least one previously accepted contribution.",
     inputSchema: {
       id: z.string().describe("Task id from list_tasks"),
     },
   },
   async ({ id }) => {
+    const preview = await board.getTask(id);
+    if (effortRank(preview.estimatedEffort) >= 3) {
+      const me = await board.whoami();
+      const stats = await board.impactStats();
+      if (!(stats.acceptedByVolunteer[me] > 0)) {
+        throw new Error(
+          `Task ${id} is a ${preview.estimatedEffort} task, reserved for volunteers with at least one accepted contribution. Build a track record on a smaller task first — use list_tasks with max_effort "1-2 sessions".`,
+        );
+      }
+    }
     const task = await board.claimTask(id);
     return text(
       `Claimed: ${summarize(task)}\nWork in an isolated directory. When finished, verify your work against each acceptance criterion, then use submit_result. If you can't finish, use release_task so someone else can pick it up.`,
@@ -277,6 +296,42 @@ server.registerTool(
     });
     return text(
       `Task posted: ${url}\nIt is not visible to volunteers until a board maintainer adds the "task" and "approved" labels.`,
+    );
+  },
+);
+
+server.registerTool(
+  "impact",
+  {
+    title: "Board impact and your track record",
+    description:
+      "Show what the board has produced: accepted deliverables per charity, the volunteer leaderboard, current pipeline counts, and the current volunteer's own track record. Use it when the user asks what their donated sessions have added up to, or to check reputation before claiming a large task.",
+    inputSchema: {},
+  },
+  async () => {
+    const me = await board.whoami();
+    const stats = await board.impactStats();
+    const leaderboard = Object.entries(stats.acceptedByVolunteer)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([login, n], i) => `${i + 1}. ${login} — ${n} accepted`);
+    const charities = Object.entries(stats.acceptedByCharity)
+      .sort((a, b) => b[1] - a[1])
+      .map(([charity, n]) => `- ${charity}: ${n} accepted deliverable(s)`);
+    const mine = stats.acceptedByVolunteer[me] ?? 0;
+    return text(
+      [
+        `Impact on the ${board.name()}:`,
+        `Pipeline: ${stats.open} open | ${stats.inProgress} in progress | ${stats.awaitingReview} awaiting review | ${stats.accepted} accepted`,
+        "",
+        charities.length ? `Delivered to charities:\n${charities.join("\n")}` : "No accepted deliverables yet — be the first.",
+        "",
+        leaderboard.length ? `Volunteer leaderboard:\n${leaderboard.join("\n")}` : "",
+        "",
+        `Your track record (${me}): ${mine} accepted contribution(s)${mine === 0 ? " — a 1-session task is a good place to start" : ""}.`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     );
   },
 );

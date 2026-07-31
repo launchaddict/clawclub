@@ -51,6 +51,17 @@ export interface TaskDraft {
   acceptanceCriteria: string[];
 }
 
+export interface BoardStats {
+  open: number;
+  inProgress: number;
+  awaitingReview: number;
+  accepted: number;
+  // login → number of accepted contributions (the volunteer's track record)
+  acceptedByVolunteer: Record<string, number>;
+  // charity → number of accepted deliverables
+  acceptedByCharity: Record<string, number>;
+}
+
 export interface TaskBoard {
   name(): string;
   listTasks(category?: string): Promise<Task[]>;
@@ -60,7 +71,46 @@ export interface TaskBoard {
   submitResult(submission: Submission): Promise<Task>;
   submitReview(review: Review): Promise<Task>;
   postTask(draft: TaskDraft): Promise<string>;
+  impactStats(): Promise<BoardStats>;
   whoami(): Promise<string>;
+}
+
+// Ranks for effort matching: a volunteer with "1 session" of time shouldn't be
+// offered a "2-3 sessions" task first.
+export const EFFORT_RANK: Record<string, number> = {
+  "1 session": 1,
+  "1-2 sessions": 2,
+  "2-3 sessions": 3,
+};
+
+export function effortRank(effort: string): number {
+  return EFFORT_RANK[effort] ?? 2;
+}
+
+export function computeStats(tasks: Task[]): BoardStats {
+  const stats: BoardStats = {
+    open: 0,
+    inProgress: 0,
+    awaitingReview: 0,
+    accepted: 0,
+    acceptedByVolunteer: {},
+    acceptedByCharity: {},
+  };
+  for (const t of tasks) {
+    if (t.status === "open") stats.open++;
+    else if (t.status === "claimed") stats.inProgress++;
+    else if (t.status === "submitted") stats.awaitingReview++;
+    else if (t.status === "accepted") {
+      stats.accepted++;
+      if (t.claimedBy) {
+        stats.acceptedByVolunteer[t.claimedBy] =
+          (stats.acceptedByVolunteer[t.claimedBy] ?? 0) + 1;
+      }
+      stats.acceptedByCharity[t.charity] =
+        (stats.acceptedByCharity[t.charity] ?? 0) + 1;
+    }
+  }
+  return stats;
 }
 
 export const CLAIM_TTL_MS =

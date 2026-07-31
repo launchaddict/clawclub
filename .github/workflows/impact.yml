@@ -1,0 +1,39 @@
+name: Regenerate impact page
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  impact:
+    runs-on: ubuntu-latest
+    # For comment events, only react to lifecycle markers to avoid churn
+    if: >
+      github.event_name != 'issue_comment' ||
+      contains(github.event.comment.body, '[clawclub-accept]') ||
+      contains(github.event.comment.body, '[clawclub-result]')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run build
+      - run: node scripts/impact.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit if changed
+        run: |
+          if ! git diff --quiet IMPACT.md; then
+            git config user.name "clawclub-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add IMPACT.md
+            git commit -m "Regenerate IMPACT.md"
+            git push
+          fi

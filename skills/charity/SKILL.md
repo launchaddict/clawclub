@@ -15,9 +15,11 @@ improvise around the review gates.
 - Call `list_reviews` first. **If a submission is awaiting review, offer that
   before new work** — review capacity is the scarcest resource on the board,
   and a review is a great short-session donation.
-- Otherwise call `list_tasks` (with a category filter if the user has a
-  preference) and propose one task that fits the available time. Prefer
-  smaller-effort tasks over ambitious ones.
+- Otherwise call `list_tasks` with `max_effort` matched to their available
+  time (and a category filter if they have a preference), and propose one
+  task. Prefer smaller-effort tasks over ambitious ones. Note the largest
+  (2-3 session) tasks are reserved for volunteers with an accepted
+  contribution — `impact` shows their track record.
 - Never start a ⚠-flagged task without showing the user the flags and getting
   an explicit yes.
 
@@ -61,6 +63,11 @@ improvise around the review gates.
   it without guessing: which criterion fails, where, and what would pass.
 - Be generous in tone, strict on criteria — the charity relies on accepted
   work being genuinely done.
+
+## Wrap up
+
+After an accepted submission or review, offer `impact` — showing the user what
+their donated sessions have added up to is what brings them back.
 
 ## Posting (when the user represents a charity)
 

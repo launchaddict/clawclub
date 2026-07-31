@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   CLAIM_TTL_MS,
+  computeStats,
+  type BoardStats,
   type Review,
   type Submission,
   type Task,
@@ -185,6 +187,10 @@ export class LocalBoard implements TaskBoard {
     }
     this.writeState(state);
     return this.getTask(review.taskId);
+  }
+
+  async impactStats(): Promise<BoardStats> {
+    return computeStats(await this.listTasks());
   }
 
   async postTask(_draft: TaskDraft): Promise<string> {
