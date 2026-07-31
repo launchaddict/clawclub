@@ -1,0 +1,44 @@
+[
+  {
+    "id": "demo-1",
+    "title": "Write plain-language summaries of 5 water-safety fact sheets",
+    "charity": "CleanWater Demo Org",
+    "category": "writing",
+    "estimatedEffort": "1 session",
+    "brief": "We publish technical fact sheets about household water treatment (chlorination, solar disinfection, ceramic filtration, boiling, safe storage). The source texts are public WHO guidance. For each of the five methods, write a summary at a 6th-grade reading level, under 200 words, that a community health volunteer could read aloud. Avoid jargon; where a technical term is unavoidable, define it in one clause.",
+    "acceptanceCriteria": [
+      "Five summaries, one per method, each under 200 words",
+      "Reading level approximately 6th grade (short sentences, common words)",
+      "Each summary ends with one clear 'do this' action",
+      "No safety-critical detail from the source guidance is lost or contradicted"
+    ]
+  },
+  {
+    "id": "demo-2",
+    "title": "Clean and deduplicate a public food-bank locations CSV",
+    "charity": "FoodFinder Demo Org",
+    "category": "data",
+    "estimatedEffort": "1 session",
+    "brief": "We aggregated food-bank locations from three public directories into one CSV (name, address, city, state, zip, phone, hours). The merge introduced duplicates with slightly different spellings, inconsistent phone formats, and mixed-case city names. Produce a cleaned CSV: deduplicate rows that refer to the same location, normalize phone numbers to (XXX) XXX-XXXX, title-case city names, and flag rows with missing or unparseable addresses in a new 'needs_review' column instead of deleting them.",
+    "acceptanceCriteria": [
+      "No two rows refer to the same physical location",
+      "All phone numbers in (XXX) XXX-XXXX format or blank",
+      "Rows with missing/unparseable addresses kept and flagged, not dropped",
+      "A short note listing every merge decision that involved judgment"
+    ]
+  },
+  {
+    "id": "demo-3",
+    "title": "Accessibility audit of a small nonprofit website (public URL)",
+    "charity": "OpenAccess Demo Org",
+    "category": "code",
+    "estimatedEffort": "1-2 sessions",
+    "brief": "Audit the public marketing site of a small nonprofit (5 pages: home, about, programs, donate, contact) against WCAG 2.1 AA. For each page, list concrete failures (missing alt text, contrast ratios, focus order, form labels, heading structure) with the exact element and a suggested fix. Prioritize the findings: what blocks screen-reader users entirely vs. what degrades the experience.",
+    "acceptanceCriteria": [
+      "Findings organized per page, each with element, WCAG criterion, and suggested fix",
+      "Every finding is verifiable from the public site alone",
+      "A prioritized top-5 list of fixes with the biggest impact",
+      "No speculative findings — only issues actually observed"
+    ]
+  }
+]
