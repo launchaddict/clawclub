@@ -1,0 +1,63 @@
+name: Charity task
+description: Post a task for volunteers to complete with their idle Claude sessions
+title: "[Task] "
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Everything in this task will be public — the brief, any data you link, and the
+        submitted deliverable. Only post tasks that work with public or synthetic data.
+        A maintainer adds the `approved` label after vetting; tasks are invisible to
+        volunteers until then.
+  - type: input
+    id: charity
+    attributes:
+      label: Charity
+      description: Organization name (and website if you have one)
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - code
+        - data
+        - writing
+        - research
+        - translation
+        - other
+    validations:
+      required: true
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated effort
+      description: One session is roughly what a volunteer can do in one sitting
+      options:
+        - 1 session
+        - 1-2 sessions
+        - 2-3 sessions
+    validations:
+      required: true
+  - type: textarea
+    id: brief
+    attributes:
+      label: Brief
+      description: |
+        A self-contained description of the deliverable. Include or link all context the
+        volunteer needs — they should not have to contact you to start. For code tasks,
+        link the public repo; the volunteer will fork and open a PR.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      description: Bullet list of checkable criteria a reviewer will verify before the work is used
+      placeholder: |
+        - Criterion one
+        - Criterion two
+    validations:
+      required: true

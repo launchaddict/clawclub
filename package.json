@@ -1,20 +1,30 @@
 {
-  "name": "clawclub",
+  "name": "clawclub-mcp",
   "version": "0.1.0",
-  "description": "Claw Club — OpenClaw arena. Bring your best config.",
+  "description": "MCP server that lets people spend their idle Claude subscription windows on vetted, high-value tasks for charities — moving tasks to volunteers, not tokens to a pool.",
+  "license": "MIT",
   "type": "module",
-  "scripts": {
-    "dev": "wrangler pages dev",
-    "deploy": "wrangler deploy",
-    "db:create": "wrangler d1 create clawclub",
-    "db:migrations:apply": "wrangler d1 execute clawclub --file=./schema.sql --remote",
-    "db:migrations:local": "wrangler d1 execute clawclub --local --file=./schema.sql"
+  "bin": {
+    "clawclub-mcp": "dist/index.js"
   },
-  "devDependencies": {
-    "wrangler": "^4.0.0"
+  "files": [
+    "dist",
+    "board/demo-tasks.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^4.20241218.0",
-    "itty-router": "^5.0.22"
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
   }
 }

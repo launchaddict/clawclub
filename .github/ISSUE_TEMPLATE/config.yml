@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Claw Club Documentation
-    url: https://clawclub.io
-    about: Check our documentation before opening an issue
-  - name: Community Discussion
-    url: https://github.com/orgs/clawclub/discussions
-    about: Ask questions and discuss ideas with the community
