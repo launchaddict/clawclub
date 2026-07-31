@@ -62,6 +62,13 @@ export interface BoardStats {
   acceptedByCharity: Record<string, number>;
 }
 
+export interface ScopingRequest {
+  id: string;
+  title: string;
+  body: string;
+  url?: string;
+}
+
 export interface TaskBoard {
   name(): string;
   listTasks(category?: string): Promise<Task[]>;
@@ -71,6 +78,8 @@ export interface TaskBoard {
   submitResult(submission: Submission): Promise<Task>;
   submitReview(review: Review): Promise<Task>;
   postTask(draft: TaskDraft): Promise<string>;
+  scopingQueue(): Promise<ScopingRequest[]>;
+  postScopedDraft(requestId: string, draft: TaskDraft, notes: string): Promise<string>;
   impactStats(): Promise<BoardStats>;
   whoami(): Promise<string>;
 }

@@ -26,7 +26,11 @@ Volunteer B: "/charity" (short session)            ▼
 ```
 
 Every step runs inside someone's donated session. There is no backend, no queue
-service, no accounts — the entire coordination layer is public GitHub Issues.
+service, no accounts, no API keys — the entire coordination layer is public
+GitHub Issues, and all intelligence comes from the volunteers' own sessions. The
+MCP server is client-agnostic, so any MCP-capable agent can volunteer; only the
+`clawclub-autodonate` helper is Claude Code-specific (it reads Claude Code's
+local transcript logs).
 
 ## Why this design is ToS-clean
 
@@ -73,6 +77,7 @@ claude mcp add clawclub \
 | `list_reviews` | Submissions awaiting peer review (never your own) |
 | `submit_review` | Accept — clears the work for the charity — or reject with concrete feedback, returning the task to the claimant for rework |
 | `post_task` | Lets a charity post a task from their own session; safety-linted before posting, invisible until a maintainer approves |
+| `scoping_queue` / `post_scoped_draft` | Raw charity requests, and the donated-session workflow that turns them into well-scoped tasks |
 | `impact` | Board-wide pipeline, per-charity deliverables, volunteer leaderboard, and your own track record |
 
 Extras on top of the tools: `list_tasks` takes `max_effort` so short windows get
@@ -181,15 +186,16 @@ deliverables per charity and the volunteer leaderboard — daily and whenever a
 result or acceptance lands, using only the repo's built-in Actions token. Donors
 get a permanent public track record; charities get a page to point funders at.
 
-## For charities: raw requests get auto-scoped
+## For charities: raw requests get scoped by donated sessions too
 
 Don't know how to write a good task? Open a plain-prose issue describing what you
-need. When a maintainer adds the `needs-scoping` label,
-`.github/workflows/scope.yml` (optional — needs an `ANTHROPIC_API_KEY` repo
-secret) has Claude rewrite it into a structured, session-sized draft with
-checkable acceptance criteria, runs the safety lint on the result, and posts it
-as a comment for the maintainer to publish. The scarcest resource in volunteer
-platforms — task scoping — becomes a label.
+need; a maintainer adds the `needs-scoping` label. Scoping it is itself
+donated-session work — volunteers see the request via `scoping_queue`, draft a
+structured, session-sized task with checkable acceptance criteria in their own
+session, and post it with `post_scoped_draft` (safety-linted, published only
+after maintainer approval). No API keys, no paid backend anywhere in the loop:
+the scarcest resource in volunteer platforms — task scoping — is just another
+thing an idle window can donate.
 
 ## For charities
 
@@ -204,7 +210,7 @@ research.
 
 ## Status
 
-v0.3 — the full loop is closed: post (or auto-scope) → vet → match by effort →
+v0.3 — the full loop is closed: post (or scope in-session) → vet → match by effort →
 claim (reputation-gated at the top end) → work → self-verify → peer review →
 accept/rework → public impact page, plus nudge/auto donation triggers on the
 volunteer side. Deliberately out of scope until demand proves out: private-data

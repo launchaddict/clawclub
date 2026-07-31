@@ -3,6 +3,7 @@ import {
   computeStats,
   type BoardStats,
   type Review,
+  type ScopingRequest,
   type Submission,
   type Task,
   type TaskBoard,
@@ -336,6 +337,47 @@ export class GitHubBoard implements TaskBoard {
       `${marker}\n${heading}\n\n${review.feedback}\n\n_Reviewed via clawclub-mcp._`,
     );
     return this.getTask(review.taskId);
+  }
+
+  // Raw charity requests waiting to be turned into structured tasks. Scoping
+  // them is itself donated-session work — no API keys, no backend: a
+  // volunteer's own session reads the prose and drafts the structured task.
+  async scopingQueue(): Promise<ScopingRequest[]> {
+    const issues = await this.api<GhIssue[]>(
+      `/repos/${this.repo}/issues?labels=needs-scoping&state=open&per_page=100`,
+    );
+    return issues
+      .filter((i) => !("pull_request" in i))
+      .map((i) => ({
+        id: String(i.number),
+        title: i.title,
+        body: i.body ?? "",
+        url: i.html_url,
+      }));
+  }
+
+  async postScopedDraft(requestId: string, draft: TaskDraft, notes: string): Promise<string> {
+    const flags = lintBrief(`${draft.title}\n${draft.brief}`);
+    const body = [
+      "## Structured draft (scoped in a donated session)",
+      "",
+      `### Charity\n${draft.charity}`,
+      `### Category\n${draft.category}`,
+      `### Estimated effort\n${draft.estimatedEffort}`,
+      `### Brief\n${draft.brief}`,
+      `### Acceptance criteria\n${draft.acceptanceCriteria.map((c) => `- ${c}`).join("\n")}`,
+      "",
+      `**Suggested title:** ${draft.title}`,
+      `**Notes for maintainer:** ${notes}`,
+      `**Safety lint:** ${flags.length ? `⚠ flagged: ${flags.join(", ")} — do not approve as-is` : "clean"}`,
+      "",
+      "To publish: replace the issue body with the draft above (from `### Charity` through the criteria), set the title, then swap the `needs-scoping` label for `task` + `approved`.",
+      "",
+      "_Scoped via clawclub-mcp._",
+    ].join("\n");
+    await this.comment(requestId, body);
+    const issue = await this.api<GhIssue>(`/repos/${this.repo}/issues/${requestId}`);
+    return issue.html_url;
   }
 
   async postTask(draft: TaskDraft): Promise<string> {

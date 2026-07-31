@@ -193,6 +193,16 @@ export class LocalBoard implements TaskBoard {
     return computeStats(await this.listTasks());
   }
 
+  async scopingQueue() {
+    return [];
+  }
+
+  async postScopedDraft(): Promise<string> {
+    throw new Error(
+      "The demo board has no scoping queue. Set CLAWCLUB_BOARD_REPO (and GITHUB_TOKEN) to scope requests on a real board.",
+    );
+  }
+
   async postTask(_draft: TaskDraft): Promise<string> {
     throw new Error(
       "The demo board is read-only. Set CLAWCLUB_BOARD_REPO (and GITHUB_TOKEN) to post tasks to a real board.",
